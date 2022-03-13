@@ -1,0 +1,4 @@
+name: google-cloud-run-microservices
+runtime: dotnet
+main: Infra
+description: An example of calling one Google Cloud Run service from another.
