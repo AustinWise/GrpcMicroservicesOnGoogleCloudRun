@@ -31,8 +31,8 @@ class MyStack : Stack
         var backendService = createService("backend-service", backendImage);
         var frontendService = createService("frontend-service", frontendImage, serviceAccountName: frontEndServiceAccount.Email, envs: new InputList<ServiceTemplateSpecContainerEnvArgs>
         {
-            backendService.Statuses.Apply(list => new ServiceTemplateSpecContainerEnvArgs() { Name = "Greeter__URI", Value = list[0].Url! }),
-            new ServiceTemplateSpecContainerEnvArgs() { Name = "MY__ServiceAccount", Value = frontEndServiceAccount.Email },
+            backendService.Statuses.Apply(list => new ServiceTemplateSpecContainerEnvArgs() { Name = "GrpcService__BackendUri", Value = list[0].Url! }),
+            new ServiceTemplateSpecContainerEnvArgs() { Name = "CloudRun__ServiceIdentity", Value = frontEndServiceAccount.Email },
         });
 
         var binding = new IamBinding("frontend-to-backend-binding", new IamBindingArgs()
@@ -56,11 +56,19 @@ class MyStack : Stack
             Location = LOCATION,
         });
 
+        this.ServiceAccount = frontEndServiceAccount.Email;
+        this.ServiceUrl = backendService.Statuses.Apply(list => list[0].Url);
         this.FrontendUrl = frontendService.Statuses.Apply(list => list[0].Url);
     }
 
     [Output]
+    public Output<string?> ServiceUrl { get; set; }
+
+    [Output]
     public Output<string?> FrontendUrl { get; set; }
+
+    [Output]
+    public Output<string> ServiceAccount { get; set; }
 
     private Service createService(string name, Pulumi.Docker.Image image, Input<string>? serviceAccountName = null, InputList<ServiceTemplateSpecContainerEnvArgs>? envs = null)
     {

@@ -10,15 +10,7 @@ if (builder.Environment.IsProduction())
     builder.Logging.AddGoogle();
 }
 
-var grpc = builder.Services.AddGrpcClient<GrpcContracts.Greeters.Greeter.GreeterClient>(o =>
-{
-    o.Address = new Uri(builder.Configuration["Greeter:URI"]);
-});
-
-if (builder.Environment.IsProduction())
-{
-    grpc.ConfigureComputeCredentialAuth();
-}
+await builder.Services.AddGrpcClientWithGcpServiceIdentityAsync<GrpcContracts.Greeters.Greeter.GreeterClient>(builder.Configuration["GrpcService:BackendUri"], builder.Configuration["CloudRun:ServiceIdentity"]);
 
 var app = builder.Build();
 
@@ -43,10 +35,10 @@ app.MapControllerRoute(
 string? port = Environment.GetEnvironmentVariable("PORT");
 if (port == null)
 {
-    app.Run();
+    await app.RunAsync();
 }
 else
 {
     var url = $"http://0.0.0.0:{port}";
-    app.Run(url);
+    await app.RunAsync(url);
 }
