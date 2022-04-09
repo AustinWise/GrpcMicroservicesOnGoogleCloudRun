@@ -1,7 +1,9 @@
 using Pulumi;
 using Pulumi.Gcp.CloudRun;
 using Pulumi.Gcp.CloudRun.Inputs;
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 class MyStack : Stack
 {
@@ -9,8 +11,25 @@ class MyStack : Stack
     const string PROJECT = "austin-pulumi-test";
     const string REPO_ID = "my-id";
 
+    readonly string mRepoRoot;
+
+    static string getRepoRoot()
+    {
+        string? repoRoot = Path.GetDirectoryName(typeof(MyStack).Assembly.Location);
+        while (repoRoot is object && !File.Exists(Path.Combine(repoRoot, "Pulumi.yaml")))
+        {
+            repoRoot = Path.GetDirectoryName(repoRoot);
+        }
+        if (repoRoot == null)
+            throw new Exception("Could not find Pulumi.yaml");
+        return repoRoot;
+    }
+
     public MyStack()
     {
+        // TODO: is there a Pulumi-supported way of finding the directory are being run from?
+        mRepoRoot = getRepoRoot();
+
         var artifacts = new Pulumi.Gcp.ArtifactRegistry.Repository("my-artifacts", new Pulumi.Gcp.ArtifactRegistry.RepositoryArgs()
         {
             Format = "DOCKER",
@@ -113,14 +132,14 @@ class MyStack : Stack
         });
     }
 
-    private static Pulumi.Docker.Image createDockerImage(string imageName, string folderName)
+    private Pulumi.Docker.Image createDockerImage(string imageName, string folderName)
     {
         var frontendImage = new Pulumi.Docker.Image(imageName, new Pulumi.Docker.ImageArgs
         {
             Build = new Pulumi.Docker.DockerBuild()
             {
-                Context = "..",
-                Dockerfile = $"../{folderName}/Dockerfile",
+                Context = mRepoRoot,
+                Dockerfile = Path.Combine(mRepoRoot, folderName, "Dockerfile"),
             },
             // TODO: take a Repository object to calculate the image name
             ImageName = $"{LOCATION}-docker.pkg.dev/{PROJECT}/{REPO_ID}/{imageName}",

@@ -3,13 +3,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32228.430
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infra", "Infra\Infra.csproj", "{4C325EDF-42F3-425C-8C20-BB0493F44F65}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrontendWebApp", "FrontendWebApp\FrontendWebApp.csproj", "{B04536A5-7607-4C08-9FAD-762E1432F2B7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcContracts", "GrpcContracts\GrpcContracts.csproj", "{52D7D5E5-1F48-499C-8151-9974468F4F3A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackendService", "BackendService\BackendService.csproj", "{0ACABCB0-8BE5-4AD6-8342-562953AD5259}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PulumiInfra", "Infra\PulumiInfra\PulumiInfra.csproj", "{092EF016-6173-489E-813A-53E61A9ABF79}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{913A275A-D5B2-4AFA-AE8E-672F7C826434}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.gitignore = .gitignore
+		Pulumi.dev.yaml = Pulumi.dev.yaml
+		Pulumi.yaml = Pulumi.yaml
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{B0C92107-D38F-4F89-ADCF-B9A4C9A6A1D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +28,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4C325EDF-42F3-425C-8C20-BB0493F44F65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C325EDF-42F3-425C-8C20-BB0493F44F65}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C325EDF-42F3-425C-8C20-BB0493F44F65}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C325EDF-42F3-425C-8C20-BB0493F44F65}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B04536A5-7607-4C08-9FAD-762E1432F2B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B04536A5-7607-4C08-9FAD-762E1432F2B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B04536A5-7607-4C08-9FAD-762E1432F2B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,9 +40,16 @@ Global
 		{0ACABCB0-8BE5-4AD6-8342-562953AD5259}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0ACABCB0-8BE5-4AD6-8342-562953AD5259}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0ACABCB0-8BE5-4AD6-8342-562953AD5259}.Release|Any CPU.Build.0 = Release|Any CPU
+		{092EF016-6173-489E-813A-53E61A9ABF79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{092EF016-6173-489E-813A-53E61A9ABF79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{092EF016-6173-489E-813A-53E61A9ABF79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{092EF016-6173-489E-813A-53E61A9ABF79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{092EF016-6173-489E-813A-53E61A9ABF79} = {B0C92107-D38F-4F89-ADCF-B9A4C9A6A1D5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {591BB1BA-81E7-4F97-A39F-CB4157B88889}
