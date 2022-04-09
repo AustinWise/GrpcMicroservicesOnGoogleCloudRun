@@ -1,9 +1,13 @@
+using InfraLib;
 using Pulumi;
 using Pulumi.Gcp.CloudRun;
 using Pulumi.Gcp.CloudRun.Inputs;
+using Pulumi.Gcp.ServiceAccount;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 
 class MyStack : Stack
 {
@@ -12,25 +16,39 @@ class MyStack : Stack
     const string REPO_ID = "my-id";
 
     readonly string mRepoRoot;
+    readonly List<ServiceDefinition> mServiceDefs;
 
-    static string getRepoRoot()
+    readonly Pulumi.Gcp.ArtifactRegistry.Repository mArtifacts;
+    readonly Dictionary<ServiceDefinition, Service> mServices = new();
+    readonly Dictionary<ServiceDefinition, Account> mAccounts = new();
+
+    private Service GetOrCreateService(ServiceDefinition def)
     {
-        string? repoRoot = Path.GetDirectoryName(typeof(MyStack).Assembly.Location);
-        while (repoRoot is object && !File.Exists(Path.Combine(repoRoot, "Pulumi.yaml")))
+        Service? svc;
+        if (mServices.TryGetValue(def, out svc))
+            return svc;
+
+        var account = mAccounts[def];
+        var envs = new InputList<ServiceTemplateSpecContainerEnvArgs>();
+        foreach (var dep in def.Dependancies)
         {
-            repoRoot = Path.GetDirectoryName(repoRoot);
+            envs.Add(GetOrCreateService(dep).Statuses.Apply(list => new ServiceTemplateSpecContainerEnvArgs() { Name = "GrpcService__" + dep.Name, Value = list[0].Url! }));
         }
-        if (repoRoot == null)
-            throw new Exception("Could not find Pulumi.yaml");
-        return repoRoot;
+        envs.Add(new ServiceTemplateSpecContainerEnvArgs() { Name = "CloudRun__ServiceIdentity", Value = account.Email });
+        var img = createDockerImage(def.Name, def.RepoRelativePath);
+        svc = createService(def.Name, img, account, envs);
+
+        mServices.Add(def, svc);
+        return svc;
     }
 
     public MyStack()
     {
         // TODO: is there a Pulumi-supported way of finding the directory are being run from?
-        mRepoRoot = getRepoRoot();
+        mRepoRoot = RootFinder.GetRepoRoot();
+        mServiceDefs = ServiceDefinition.GetAllServices();
 
-        var artifacts = new Pulumi.Gcp.ArtifactRegistry.Repository("my-artifacts", new Pulumi.Gcp.ArtifactRegistry.RepositoryArgs()
+        mArtifacts = new Pulumi.Gcp.ArtifactRegistry.Repository("my-artifacts", new Pulumi.Gcp.ArtifactRegistry.RepositoryArgs()
         {
             Format = "DOCKER",
             Location = LOCATION,
@@ -38,68 +56,68 @@ class MyStack : Stack
             RepositoryId = REPO_ID,
         });
 
-        Pulumi.Docker.Image frontendImage = createDockerImage("frontend-app", "FrontendWebApp");
-        Pulumi.Docker.Image backendImage = createDockerImage("backend-app", "BackendService");
-
-        var frontEndServiceAccount = new Pulumi.Gcp.ServiceAccount.Account("frontend-service-account", new Pulumi.Gcp.ServiceAccount.AccountArgs()
+        foreach (var svc in mServiceDefs)
         {
-            AccountId = "frontend",
-            Project = PROJECT,
-        });
-
-        var backendService = createService("backend-service", backendImage);
-        var frontendService = createService("frontend-service", frontendImage, serviceAccountName: frontEndServiceAccount.Email, envs: new InputList<ServiceTemplateSpecContainerEnvArgs>
-        {
-            backendService.Statuses.Apply(list => new ServiceTemplateSpecContainerEnvArgs() { Name = "GrpcService__BackendUri", Value = list[0].Url! }),
-            new ServiceTemplateSpecContainerEnvArgs() { Name = "CloudRun__ServiceIdentity", Value = frontEndServiceAccount.Email },
-        });
-
-        var binding = new IamBinding("frontend-to-backend-binding", new IamBindingArgs()
-        {
-            Project = PROJECT,
-            Location = LOCATION,
-            Service = backendService.Name,
-            Role = "roles/run.invoker",
-            Members = new InputList<string>()
+            mAccounts.Add(svc, new Account(svc.Name + "-account", new AccountArgs()
             {
-                frontEndServiceAccount.Email.Apply(email => $"serviceAccount:{email}"),
-            },
-        });
+                AccountId = svc.Name,
+                Project = PROJECT,
+            }));
+        }
 
-        var frontendPublic = new IamMember("frontend-service-public-invoker", new IamMemberArgs()
+        foreach (var svc in mServiceDefs)
         {
-            Service = frontendService.Name,
-            Member = "allUsers",
-            Role = "roles/run.invoker",
-            Project = PROJECT,
-            Location = LOCATION,
-        });
+            GetOrCreateService(svc);
+        }
 
-        this.ServiceAccount = frontEndServiceAccount.Email;
-        this.ServiceUrl = backendService.Statuses.Apply(list => list[0].Url);
-        this.FrontendUrl = frontendService.Statuses.Apply(list => list[0].Url);
+        foreach (var svc in mServiceDefs)
+        {
+            var account = mAccounts[svc];
+            foreach (var dep in svc.Dependancies)
+            {
+                var binding = new IamBinding($"{svc.Name}-to-{dep.Name}-binding", new IamBindingArgs()
+                {
+                    Project = PROJECT,
+                    Location = LOCATION,
+                    Service = mServices[dep].Name,
+                    Role = "roles/run.invoker",
+                    Members = new InputList<string>()
+                    {
+                        account.Email.Apply(email => $"serviceAccount:{email}"),
+                    },
+                });
+
+            }
+        }
+
+        foreach (var kvp in mServices)
+        {
+            if (kvp.Key.IsPublic)
+            {
+                new IamMember(kvp.Key.Name + "public-invoker", new IamMemberArgs()
+                {
+                    Service = kvp.Value.Name,
+                    Member = "allUsers",
+                    Role = "roles/run.invoker",
+                    Project = PROJECT,
+                    Location = LOCATION,
+                });
+            }
+        }
+
+        PublicUrls = Output.All(mServices.Where(kvp => kvp.Key.IsPublic).Select(kvp => kvp.Value.Statuses.Apply(s => s[0].Url)));
     }
 
     [Output]
-    public Output<string?> ServiceUrl { get; set; }
+    public Output<ImmutableArray<string?>> PublicUrls { get; set; }
 
-    [Output]
-    public Output<string?> FrontendUrl { get; set; }
-
-    [Output]
-    public Output<string> ServiceAccount { get; set; }
-
-    private Service createService(string name, Pulumi.Docker.Image image, Input<string>? serviceAccountName = null, InputList<ServiceTemplateSpecContainerEnvArgs>? envs = null)
+    private Service createService(string name, Pulumi.Docker.Image image, Account serviceAccountName, InputList<ServiceTemplateSpecContainerEnvArgs> envs)
     {
         var containerArgs = new ServiceTemplateSpecContainerArgs()
         {
             Image = image.ImageName,
+            Envs = envs,
         };
-        if (envs is object)
-        {
-            containerArgs.Envs = envs;
-        }
-
 
         var spec = new ServiceTemplateSpecArgs()
         {
@@ -107,11 +125,8 @@ class MyStack : Stack
             {
                 containerArgs,
             },
+            ServiceAccountName = serviceAccountName.Email,
         };
-        if (serviceAccountName != null)
-        {
-            spec.ServiceAccountName = serviceAccountName;
-        }
 
         return new Service(name, new ServiceArgs()
         {
@@ -134,7 +149,7 @@ class MyStack : Stack
 
     private Pulumi.Docker.Image createDockerImage(string imageName, string folderName)
     {
-        var frontendImage = new Pulumi.Docker.Image(imageName, new Pulumi.Docker.ImageArgs
+        var img = new Pulumi.Docker.Image(imageName, new Pulumi.Docker.ImageArgs
         {
             Build = new Pulumi.Docker.DockerBuild()
             {
@@ -147,6 +162,6 @@ class MyStack : Stack
             // gcloud auth configure-docker us-west1-docker.pkg.dev
             // TODO: see if there is a way to get some credentials to pass to Docker
         });
-        return frontendImage;
+        return img;
     }
 }

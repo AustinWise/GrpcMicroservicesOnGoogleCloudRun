@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{B0C92107-D38F-4F89-ADCF-B9A4C9A6A1D5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfraLib", "Infra\InfraLib\InfraLib.csproj", "{9881802B-13C6-4663-844E-13AD1387070D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,12 +46,17 @@ Global
 		{092EF016-6173-489E-813A-53E61A9ABF79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{092EF016-6173-489E-813A-53E61A9ABF79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{092EF016-6173-489E-813A-53E61A9ABF79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9881802B-13C6-4663-844E-13AD1387070D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9881802B-13C6-4663-844E-13AD1387070D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9881802B-13C6-4663-844E-13AD1387070D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9881802B-13C6-4663-844E-13AD1387070D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{092EF016-6173-489E-813A-53E61A9ABF79} = {B0C92107-D38F-4F89-ADCF-B9A4C9A6A1D5}
+		{9881802B-13C6-4663-844E-13AD1387070D} = {B0C92107-D38F-4F89-ADCF-B9A4C9A6A1D5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {591BB1BA-81E7-4F97-A39F-CB4157B88889}

@@ -12,4 +12,8 @@
 		<PackageReference Include="Pulumi.Docker" Version="3.*" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\InfraLib\InfraLib.csproj" />
+	</ItemGroup>
+
 </Project>

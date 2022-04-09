@@ -10,7 +10,7 @@ if (builder.Environment.IsProduction())
     builder.Logging.AddGoogle();
 }
 
-await builder.Services.AddGrpcClientWithGcpServiceIdentityAsync<GrpcContracts.Greeters.Greeter.GreeterClient>(builder.Configuration["GrpcService:BackendUri"], builder.Configuration["CloudRun:ServiceIdentity"]);
+await builder.Services.AddGrpcClientWithGcpServiceIdentityAsync<GrpcContracts.Greeters.Greeter.GreeterClient>(builder.Configuration["GrpcService:backend-service"], builder.Configuration["CloudRun:ServiceIdentity"]);
 
 var app = builder.Build();
 
