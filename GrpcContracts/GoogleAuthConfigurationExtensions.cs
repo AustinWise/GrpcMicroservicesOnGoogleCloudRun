@@ -24,13 +24,13 @@ public static class GoogleAuthConfigurationExtensions
     {
         ArgumentNullException.ThrowIfNull(serviceUrl);
 
-        var greeterUri = new Uri(serviceUrl);
+        var serviceUri = new Uri(serviceUrl);
         var grpc = services.AddGrpcClient<TClient>(o =>
         {
-            o.Address = greeterUri;
+            o.Address = serviceUri;
         });
 
-        if (ShouldConfigureAuthentication(greeterUri))
+        if (ShouldConfigureAuthentication(serviceUri))
         {
             var cred = await GoogleCredential.GetApplicationDefaultAsync();
             if (cred.UnderlyingCredential is not IOidcTokenProvider)
