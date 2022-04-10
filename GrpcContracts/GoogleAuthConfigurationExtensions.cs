@@ -10,16 +10,13 @@ public static class GoogleAuthConfigurationExtensions
     //What if someone is using a local proxy to forward to the remote service?
     static bool ShouldConfigureAuthentication(Uri serviceUri)
     {
-        switch (serviceUri.HostNameType)
+        return serviceUri.HostNameType switch
         {
             //TODO: IPv4 loopback is actually the whole 127.0.0.0/8 space
-            case UriHostNameType.IPv4:
-                return !IPAddress.Parse(serviceUri.Host).Equals(IPAddress.Loopback);
-            case UriHostNameType.IPv6:
-                return !IPAddress.Parse(serviceUri.Host).Equals(IPAddress.IPv6Loopback);
-            default:
-                return !serviceUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
-        }
+            UriHostNameType.IPv4 => !IPAddress.Parse(serviceUri.Host).Equals(IPAddress.Loopback),
+            UriHostNameType.IPv6 => !IPAddress.Parse(serviceUri.Host).Equals(IPAddress.IPv6Loopback),
+            _ => !serviceUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase),
+        };
     }
 
     public static async Task AddGrpcClientWithGcpServiceIdentityAsync<TClient>(this IServiceCollection services, string? serviceUrl, string? serviceIdenity)

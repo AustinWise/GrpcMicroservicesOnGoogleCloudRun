@@ -5,7 +5,7 @@
         public static string GetRepoRoot()
         {
             string? repoRoot = Path.GetDirectoryName(typeof(RootFinder).Assembly.Location);
-            while (repoRoot is object && !File.Exists(Path.Combine(repoRoot, "Pulumi.yaml")))
+            while (repoRoot is not null && !File.Exists(Path.Combine(repoRoot, "Pulumi.yaml")))
             {
                 repoRoot = Path.GetDirectoryName(repoRoot);
             }
