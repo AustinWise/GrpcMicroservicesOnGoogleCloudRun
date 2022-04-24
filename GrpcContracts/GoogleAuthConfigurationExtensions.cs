@@ -19,7 +19,7 @@ public static class GoogleAuthConfigurationExtensions
         };
     }
 
-    public static async Task AddGrpcClientWithGcpServiceIdentityAsync<TClient>(this IServiceCollection services, string? serviceUrl, string? serviceIdenity)
+    public static async Task AddGrpcClientWithGcpServiceIdentityAsync<TClient>(this IServiceCollection services, string? serviceUrl, string? serviceIdentity)
         where TClient : class
     {
         ArgumentNullException.ThrowIfNull(serviceUrl);
@@ -38,7 +38,7 @@ public static class GoogleAuthConfigurationExtensions
                 // If we are running on our developer machine, impersonate the service identity.
                 // See this article for the permissions your account needs to impersonate service identities:
                 // https://cloud.google.com/iam/docs/impersonating-service-accounts
-                cred = cred.Impersonate(new ImpersonatedCredential.Initializer(serviceIdenity));
+                cred = cred.Impersonate(new ImpersonatedCredential.Initializer(serviceIdentity));
             }
             var token = await cred.GetOidcTokenAsync(OidcTokenOptions.FromTargetAudience(serviceUrl));
 
