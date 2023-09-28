@@ -71,8 +71,8 @@ credential for the appropriate service account [will be used](GrpcContracts/Goog
 # Alternatives to this approach
 
 [Tye](https://github.com/dotnet/tye) is a similar tool that has a lot more
-polish. There are a could things about the approach used in this Repo compared
-to Tye:
+polish. The approach in this repository differs from Tye's apprach in a couple
+of ways:
 
 * This setup uses a "serverless" system to run the services (specifically Google Cloud Run, which is based on [Knative](https://knative.dev/docs/) ).
   This means this means the system will automatically scale the resource up and
